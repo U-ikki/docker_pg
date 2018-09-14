@@ -1,4 +1,4 @@
-# base Docker image (Premise: # docker pull centos:7)
+# base Docker image
 FROM centos:7
 
 MAINTAINER ikki
@@ -7,8 +7,8 @@ MAINTAINER ikki
 VOLUME "/tmp/docker"
 
 # set proxy server
-ENV http_proxy http://proxy-address:port
-ENV https_proxy http://proxy-address:port
+#ENV http_proxy http://proxy-address:port
+#ENV https_proxy http://proxy-address:port
 
 # install yum packages
 RUN yum install -y iproute openssh-server vim openssh-clients rsync
@@ -32,6 +32,10 @@ RUN set -ex && \
     chown postgres.postgres /var/lib/pgsql/.bashrc
 EXPOSE 5432
 
+# Install PostGIS
+RUN yum install -y epel-release.noarch
+RUN yum install -y gdal proj proj-devel proj-epsg
+RUN yum install -y postgis24_10
 
 # set /etc/vimrc
 RUN echo $'\

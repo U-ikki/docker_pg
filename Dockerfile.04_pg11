@@ -1,0 +1,47 @@
+# base Docker image (Premise: # docker pull centos:7)
+FROM centos:7
+
+MAINTAINER ikki
+
+# share dir  (host <-> contener)
+VOLUME "/tmp/docker"
+
+# set proxy server
+#ENV http_proxy http://proxy-address:port
+#ENV https_proxy http://proxy-address:port
+
+# install yum packages
+RUN yum install -y iproute openssh-server vim openssh-clients rsync
+
+# ssh setting
+RUN set -ex && \
+    echo 'root:root' | chpasswd    
+
+# install and setting for PG
+ENV PATH /usr/pgsql-11/bin:$PATH
+ENV PGDATA /var/lib/pgsql/11/data
+RUN set -ex && \
+    rpm -ivh https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-7-x86_64/pgdg-centos11-11-2.noarch.rpm && \
+    yum install -y postgresql11 postgresql11-contrib postgresql11-libs postgresql11-server postgresql11-devel && \
+    su -c "initdb -D $PGDATA --no-locale -E utf-8" postgres
+ADD pg11/.bashrc /var/lib/pgsql/
+ADD pg11/postgresql.conf /var/lib/pgsql/11/data/
+ADD pg11/pg_hba.conf /var/lib/pgsql/11/data/
+RUN set -ex && \
+    chown postgres.postgres $PGDATA/postgresql.conf $PGDATA/pg_hba.conf && \
+    chown postgres.postgres /var/lib/pgsql/.bashrc
+EXPOSE 5432
+
+
+# set /etc/vimrc
+RUN echo $'\
+highlight Comment ctermfg=grey\n\
+highlight Constant ctermfg=Red\n\
+highlight Identifier ctermfg=Cyan\n\
+highlight Statement ctermfg=Yellow\n\
+highlight Title ctermfg=Magenta\n\
+highlight Special ctermfg=Magenta\n\
+highlight PreProc ctermfg=Magenta\n\
+'>> /etc/vimrc
+
+
